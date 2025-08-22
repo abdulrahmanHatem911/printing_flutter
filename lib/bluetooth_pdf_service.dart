@@ -20,15 +20,32 @@ class BluetoothPdfService {
 
   // Request necessary permissions
   static Future<bool> requestPermissions() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.storage,
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
-    
-    return statuses.values.every((status) => status == PermissionStatus.granted);
+    try {
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.storage,
+        Permission.bluetooth,
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+        Permission.location,
+      ].request();
+      
+      bool allGranted = statuses.values.every((status) => 
+        status == PermissionStatus.granted || status == PermissionStatus.limited);
+      
+      if (!allGranted) {
+        // Log which permissions were denied
+        statuses.forEach((permission, status) {
+          if (status != PermissionStatus.granted && status != PermissionStatus.limited) {
+            log('Permission denied: $permission - $status');
+          }
+        });
+      }
+      
+      return allGranted;
+    } catch (e) {
+      log('Error requesting permissions: $e');
+      return false;
+    }
   }
 
   // Get list of paired Bluetooth devices
@@ -45,12 +62,26 @@ class BluetoothPdfService {
   // Connect to selected Bluetooth device
   static Future<bool> connectToDevice(BluetoothDevice device) async {
     try {
+      // Close existing connection if any
+      if (_connection != null && _connection!.isConnected) {
+        await _connection!.close();
+      }
+      
       _selectedDevice = device;
       _connection = await BluetoothConnection.toAddress(device.address);
-      log('Connected to ${device.name}');
-      return true;
+      
+      if (_connection != null && _connection!.isConnected) {
+        log('Connected to ${device.name}');
+        return true;
+      } else {
+        log('Failed to establish connection to ${device.name}');
+        _selectedDevice = null;
+        return false;
+      }
     } catch (e) {
       log('Error connecting to device: $e');
+      _selectedDevice = null;
+      _connection = null;
       return false;
     }
   }

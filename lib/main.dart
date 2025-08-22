@@ -55,12 +55,18 @@ class _MyHomePageState extends State<MyHomePage> {
       _statusMessage = 'Requesting permissions...';
     });
 
-    bool permissionsGranted = await BluetoothPdfService.requestPermissions();
-    if (permissionsGranted) {
-      await _getPairedDevices();
-    } else {
+    try {
+      bool permissionsGranted = await BluetoothPdfService.requestPermissions();
+      if (permissionsGranted) {
+        await _getPairedDevices();
+      } else {
+        setState(() {
+          _statusMessage = 'Some permissions not granted. The app may not work fully. Please check app settings.';
+        });
+      }
+    } catch (e) {
       setState(() {
-        _statusMessage = 'Permissions not granted. Please enable permissions in settings.';
+        _statusMessage = 'Error initializing app: $e';
       });
     }
 
@@ -241,25 +247,43 @@ class _MyHomePageState extends State<MyHomePage> {
                   border: Border.all(color: Colors.grey[300]!),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: PDFView(
-                  filePath: _selectedPdfFile!.path,
-                  autoSpacing: false,
-                  swipeHorizontal: true,
-                  pageSnap: false,
-                  pageFling: false,
-                  onError: (error) {
-                    print('PDF View Error: $error');
-                  },
-                  onPageError: (page, error) {
-                    print('PDF Page Error: $page: $error');
-                  },
-                ),
+                child: _pdfDocument != null
+                  ? PDFView(
+                      filePath: _selectedPdfFile!.path,
+                      autoSpacing: false,
+                      swipeHorizontal: true,
+                      pageSnap: false,
+                      pageFling: false,
+                      onError: (error) {
+                        print('PDF View Error: $error');
+                      },
+                      onPageError: (page, error) {
+                        print('PDF Page Error: $page: $error');
+                      },
+                    )
+                  : const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.picture_as_pdf, size: 48, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text('PDF Preview', style: TextStyle(color: Colors.grey)),
+                          Text('(File loaded and ready for printing)', 
+                               style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
               ),
               const SizedBox(height: 10),
               Text(
                 'File: ${_selectedPdfFile!.path.split('/').last}',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
+              if (_pdfDocument != null)
+                Text(
+                  'Pages: ${_pdfDocument!.pagesCount}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
             ],
 
             const Spacer(),
