@@ -31,15 +31,27 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  esc_pos_utils:
-    git:
-      url: https://github.com/murphkev/esc_pos_utils
-  esc_pos_printer:
-    git: https://github.com/murphkev/esc_pos_printer.git
+  
+  # PDF file handling
+  file_picker: ^8.0.0+1
+  flutter_pdfview: ^1.3.2
+  native_pdf_renderer: ^6.4.1
+  
+  # Bluetooth printing
+  flutter_bluetooth_serial: ^0.4.0
+  esc_pos_bluetooth: ^0.4.1
+  
+  # Permissions
+  permission_handler: ^11.3.1
+  
+  # Image processing (existing)
+  image: ^4.1.7
+  
+  # ESC/POS utilities (updated)
+  esc_pos_utils: ^1.1.0
 dependency_overrides:
   charset_converter: ^2.3.0
 dev_dependencies:
